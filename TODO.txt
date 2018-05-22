@@ -1,0 +1,7 @@
+- top help display commands
+- sanitize name paths
+- add -valid flag
+
+- createtemplate add dns/ip based on hostname
+
+- crl
