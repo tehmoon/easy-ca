@@ -16,6 +16,7 @@ type CommandExport struct {
 	format string
 	priv bool
 	ctx *ishell.Context
+	outputDir string
 }
 
 func (cmd CommandExport) Config() (*viper.Viper) {
@@ -39,6 +40,7 @@ func (cmd *CommandExport) Init(set *flag.FlagSet, args []string) (error) {
 	}
 
 	cmd.priv = cmd.flags.GetBool("priv")
+	cmd.outputDir = cmd.flags.GetString("output-dir")
 
 	return nil
 }
@@ -48,12 +50,12 @@ func (cmd CommandExport) Do() (error) {
 	dk := GetConfigDK(cmd.config)
 
 	if ! cmd.priv {
-		err := ExportCertificate(path, cmd.name, cmd.format, cmd.ctx, dk)
+		err := ExportCertificate(path, cmd.name, cmd.format, cmd.outputDir, cmd.ctx, dk)
 		if err != nil {
 			return errors.Wrapf(err, "Error exporting the certificate of %q", cmd.name)
 		}
 	} else {
-		err := ExportPrivateKey(path, cmd.name, cmd.format, cmd.ctx, dk)
+		err := ExportPrivateKey(path, cmd.name, cmd.format, cmd.outputDir, cmd.ctx, dk)
 		if err != nil {
 			return errors.Wrapf(err, "Error exporting the private key of %q", cmd.name)
 		}
@@ -76,6 +78,7 @@ func NewCommandExport(config, flags *viper.Viper, ctx *ishell.Context) (*cobra.C
 	cmd.Flags().StringP("name", "n", "", "Common Name to export. For CA use \"ca\".")
 	cmd.Flags().StringP("format", "f", "pem", "Default output format. Valid are: ['pem']")
 	cmd.Flags().Bool("priv", false, "Export the private key instead")
+	cmd.Flags().StringP("output-dir", "o", "", "Output to directory. Filename will be auto-generated")
 
 	cmd.MarkFlagRequired("name")
 
