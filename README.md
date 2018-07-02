@@ -67,3 +67,7 @@ Not everything is implemented but the default feature set is!!
 
   - Time validity for certificates and CRL
   - Copy path flag to config
+  - List certificates
+  - Add x509 v3 Alternative Names constrains from parsing the common name
+  - Auto CRL at create/revoke
+  - Set command: (path)
