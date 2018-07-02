@@ -65,6 +65,5 @@ Not everything is implemented but the default feature set is!!
 
 ## TODO:
 
-  - Export to file from CLI
   - Time validity for certificates and CRL
   - Copy path flag to config

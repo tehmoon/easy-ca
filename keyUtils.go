@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"path/filepath"
 	"crypto/x509"
 	"github.com/tehmoon/errors"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"fmt"
 	"github.com/abiosoft/ishell"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 func LoadPrivateKey(base, name string, dk []byte) (crypto.PrivateKey, error) {
@@ -87,7 +89,7 @@ func EnsureAbsentPrivateKey(base, name string) (error) {
 	return nil
 }
 
-func ExportPrivateKey(base, name, format string, ctx *ishell.Context, dk []byte) (error) {
+func ExportPrivateKey(base, name, format, outputDir string, ctx *ishell.Context, dk []byte) (error) {
 	key, err := LoadPrivateKey(base, name, dk)
 	if err != nil {
 		return errors.Wrap(err, "Error loading certificate")
@@ -105,6 +107,22 @@ func ExportPrivateKey(base, name, format string, ctx *ishell.Context, dk []byte)
 			output = string(data[:])
 		default:
 			return errors.Errorf("Bad format of %q", format)
+	}
+
+	if outputDir != "" {
+		dir, err := homedir.Expand(outputDir)
+		if err != nil {
+			return errors.Wrap(err, "Error expanding directory")
+		}
+
+		path := filepath.Join(dir, name + ".key")
+
+		err = ioutil.WriteFile(path, []byte(output), 0600)
+		if err != nil {
+			return errors.Wrap(err, "Error writing file")
+		}
+
+		return nil
 	}
 
 	if ctx != nil {

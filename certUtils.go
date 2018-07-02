@@ -16,6 +16,8 @@ import (
 	"github.com/tehmoon/errors"
 	"github.com/abiosoft/ishell"
 	"crypto/x509"
+	"io/ioutil"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 func createTemplate(name string, valid time.Duration) (*x509.Certificate, error) {
@@ -176,7 +178,7 @@ func EnsureAbsentCertificate(base, name string) (error) {
 	return nil
 }
 
-func ExportCertificate(base, name, format string, ctx *ishell.Context, dk []byte) (error) {
+func ExportCertificate(base, name, format, outputDir string, ctx *ishell.Context, dk []byte) (error) {
 	crt, err := LoadCertificate(base, name, dk)
 	if err != nil {
 		return errors.Wrap(err, "Error loading certificate")
@@ -190,6 +192,22 @@ func ExportCertificate(base, name, format string, ctx *ishell.Context, dk []byte
 			output = string(data[:])
 		default:
 			return errors.Errorf("Bad format of %q", format)
+	}
+
+	if outputDir != "" {
+		dir, err := homedir.Expand(outputDir)
+		if err != nil {
+			return errors.Wrap(err, "Error expanding directory")
+		}
+
+		path := filepath.Join(dir, name + ".crt")
+
+		err = ioutil.WriteFile(path, []byte(output), 0600)
+		if err != nil {
+			return errors.Wrap(err, "Error writing file")
+		}
+
+		return nil
 	}
 
 	if ctx != nil {
@@ -235,7 +253,7 @@ func LoadExpiredCertificates(base string, dk []byte) ([]pkix.RevokedCertificate,
 	return certs, nil
 }
 
-func ExportCRL(base, format string, ctx *ishell.Context, dk []byte) (error) {
+func ExportCRL(base, format, outputDir string, ctx *ishell.Context, dk []byte) (error) {
 	var crl string
 
 	switch format {
@@ -249,6 +267,22 @@ func ExportCRL(base, format string, ctx *ishell.Context, dk []byte) (error) {
 
 		default:
 			return errors.Errorf("Format %q not yet implemented", format)
+	}
+
+	if outputDir != "" {
+		dir, err := homedir.Expand(outputDir)
+		if err != nil {
+			return errors.Wrap(err, "Error expanding directory")
+		}
+
+		path := filepath.Join(dir, "crl.crt")
+
+		err = ioutil.WriteFile(path, []byte(crl), 0600)
+		if err != nil {
+			return errors.Wrap(err, "Error writing file")
+		}
+
+		return nil
 	}
 
 	if ctx == nil {

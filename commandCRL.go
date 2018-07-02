@@ -16,6 +16,7 @@ type CommandCRL struct {
 	update bool
 	export bool
 	ctx *ishell.Context
+	outputDir string
 }
 
 func (cmd CommandCRL) Config() (*viper.Viper) {
@@ -33,6 +34,8 @@ func (cmd *CommandCRL) Init(set *flag.FlagSet, args []string) (error) {
 		return errors.Wrap(ErrCommandBadFlags, "Use one of --update or --export")
 	}
 
+	cmd.outputDir = cmd.flags.GetString("output-dir")
+
 	return nil
 }
 
@@ -47,7 +50,7 @@ func (cmd CommandCRL) Do() (error) {
 			return errors.Wrap(err, "Error creating CRL")
 		}
 	} else if cmd.export {
-		err := ExportCRL(path, "pem", cmd.ctx, dk)
+		err := ExportCRL(path, "pem", cmd.outputDir, cmd.ctx, dk)
 		if err != nil {
 			return errors.Wrap(err, "Error exporting CRL")
 		}
@@ -69,6 +72,7 @@ func NewCommandCRL(config, flags *viper.Viper, ctx *ishell.Context) (*cobra.Comm
 
 	cmd.Flags().Bool("update", false, "Update Certificate Revocation List")
 	cmd.Flags().Bool("export", false, "Export Certificate Revocation List")
+	cmd.Flags().StringP("output-dir", "o", "", "Output to directory. Filename will be auto-generated")
 
 	flags.BindPFlags(cmd.Flags())
 
