@@ -12,6 +12,30 @@ Or through flags:
 password=blih ./easy-ca -p ./pki -e password export --name ca
 ```
 
+## Usage
+
+```
+Usage:
+  easy-ca [flags]
+  easy-ca [command]
+
+Available Commands:
+  create      
+  create-ca   
+  crl         
+  export      
+  help        Help about any command
+  init        
+  revoke      
+
+Flags:
+  -e, --env-password string   Environment variable for password
+  -h, --help                  help for easy-ca
+  -p, --path string           Path to the easy-ca directory database
+
+Use "easy-ca [command] --help" for more information about a command.
+```
+
 ## Caveat
 
 Not everything is implemented but the default feature set is!!
@@ -41,5 +65,6 @@ Not everything is implemented but the default feature set is!!
 
 ## TODO:
 
-  - Export CRL
   - Export to file from CLI
+  - Time validity for certificates and CRL
+  - Copy path flag to config
