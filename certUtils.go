@@ -235,6 +235,33 @@ func LoadExpiredCertificates(base string, dk []byte) ([]pkix.RevokedCertificate,
 	return certs, nil
 }
 
+func ExportCRL(base, format string, ctx *ishell.Context, dk []byte) (error) {
+	var crl string
+
+	switch format {
+		case "pem":
+			data, err := readData(filepath.Join(base, "crl.crt"), dk)
+			if err != nil {
+				return errors.Wrap(err, "Error reading CRL")
+			}
+
+			crl = string(data[:])
+
+		default:
+			return errors.Errorf("Format %q not yet implemented", format)
+	}
+
+	if ctx == nil {
+		fmt.Printf("%s", crl)
+
+		return nil
+	}
+
+	ctx.Printf("%s", crl)
+
+	return nil
+}
+
 func CreateCRL(base string, dk []byte) (error) {
 	crt, key, err := LoadCA(base, dk)
 	if err != nil {
