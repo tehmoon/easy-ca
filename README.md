@@ -50,6 +50,7 @@ Not everything is implemented but the default feature set is!!
   - Choice between ecdsa p256 and rsa
   - Export using multiple encoding: PEM, DER
   - Export using multiple format: pkcs12, pkcs8, x509
+	- ~~Support arithmetic operation for validity periods~~
   - ~~CRL revocation~~
 
 ## CryptoPasta
@@ -65,7 +66,6 @@ Not everything is implemented but the default feature set is!!
 
 ## TODO:
 
-  - Time validity for certificates and CRL
   - Copy path flag to config
   - List certificates
   - Add x509 v3 Alternative Names constrains from parsing the common name

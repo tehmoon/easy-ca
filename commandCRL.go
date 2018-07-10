@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"github.com/tehmoon/errors"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/cobra"
@@ -17,6 +18,7 @@ type CommandCRL struct {
 	export bool
 	ctx *ishell.Context
 	outputDir string
+	duration time.Duration
 }
 
 func (cmd CommandCRL) Config() (*viper.Viper) {
@@ -36,6 +38,12 @@ func (cmd *CommandCRL) Init(set *flag.FlagSet, args []string) (error) {
 
 	cmd.outputDir = cmd.flags.GetString("output-dir")
 
+	var err error
+
+	cmd.duration, err = parseDurationString(cmd.flags.GetString("duration"), time.Second)
+	if err != nil {
+		return errors.WrapErr(ErrCommandBadFlags, err)
+	}
 	return nil
 }
 
@@ -45,7 +53,7 @@ func (cmd CommandCRL) Do() (error) {
 	path := cmd.flags.GetString("path")
 
 	if cmd.update {
-		err := CreateCRL(path, dk)
+		err := CreateCRL(path, cmd.duration, dk)
 		if err != nil {
 			return errors.Wrap(err, "Error creating CRL")
 		}
@@ -73,6 +81,7 @@ func NewCommandCRL(config, flags *viper.Viper, ctx *ishell.Context) (*cobra.Comm
 	cmd.Flags().Bool("update", false, "Update Certificate Revocation List")
 	cmd.Flags().Bool("export", false, "Export Certificate Revocation List")
 	cmd.Flags().StringP("output-dir", "o", "", "Output to directory. Filename will be auto-generated")
+	cmd.Flags().StringP("duration", "d", "3600", "Set the validity of the CRL in second. Support arithmetic operations")
 
 	flags.BindPFlags(cmd.Flags())
 

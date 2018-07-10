@@ -20,6 +20,7 @@ type CommandCreate struct {
 	template *x509.Certificate
 	server bool
 	client bool
+	duration time.Duration
 }
 
 func (cmd *CommandCreate) Init(set *flag.FlagSet, args []string) (error) {
@@ -32,6 +33,13 @@ func (cmd *CommandCreate) Init(set *flag.FlagSet, args []string) (error) {
 	cmd.client = cmd.flags.GetBool("client")
 	if (! cmd.server && ! cmd.client) || (cmd.server && cmd.client) {
 		return errors.Wrap(ErrCommandBadFlags, "Use one of --server or --client")
+	}
+
+	var err error
+
+	cmd.duration, err = parseDurationString(cmd.flags.GetString("duration"), time.Second)
+	if err != nil {
+		return errors.WrapErr(ErrCommandBadFlags, err)
 	}
 
 	return nil
@@ -67,12 +75,12 @@ func (cmd CommandCreate) Do() (error) {
 	var template *x509.Certificate
 
 	if cmd.server {
-		template, err = createTemplateServer(cmd.name, 30 * 3 * 24 * time.Hour)
+		template, err = createTemplateServer(cmd.name, cmd.duration)
 		if err != nil {
 			return errors.Wrap(err, "Error generating the certificate's template for server")
 		}
 	} else if cmd.client {
-		template, err = createTemplateClient(cmd.name, 30 * 3 * 24 * time.Hour)
+		template, err = createTemplateClient(cmd.name, cmd.duration)
 		if err != nil {
 			return errors.Wrap(err, "Error generating the certificate's template for client")
 		}
@@ -111,6 +119,7 @@ func NewCommandCreate(config, flags *viper.Viper, ctx *ishell.Context) (*cobra.C
 	cmd.Flags().StringP("name", "n", "", "Common Name for the certificate")
 	cmd.Flags().Bool("server", false, "Use certificate server's side")
 	cmd.Flags().Bool("client", false, "Use certificate client's side")
+	cmd.Flags().StringP("duration", "d", "3600 * 24 * 30 * 3", "Set the Not Valid After field in second. Support arithmetic operations")
 
 	cmd.MarkFlagRequired("name")
 

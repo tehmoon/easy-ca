@@ -22,6 +22,7 @@ type CommandCreateCA struct {
 	config *viper.Viper
 	name string
 	template *x509.Certificate
+	duration time.Duration
 }
 
 func (cmd CommandCreateCA) Config() (*viper.Viper) {
@@ -36,6 +37,13 @@ func (cmd *CommandCreateCA) Init(set *flag.FlagSet, args []string) (error) {
 	cmd.name = cmd.flags.GetString("name")
 	if cmd.name == "" {
 		return errors.Wrap(ErrCommandBadFlags, "Name flag cannot be empty")
+	}
+
+	var err error
+
+	cmd.duration, err = parseDurationString(cmd.flags.GetString("duration"), time.Second)
+	if err != nil {
+		return errors.WrapErr(ErrCommandBadFlags, err)
 	}
 
 	return nil
@@ -54,7 +62,7 @@ func (cmd CommandCreateCA) Do() (error) {
 		return errors.Wrap(err, "Failed to create the private key")
 	}
 
-	template, err := createCATemplate(cmd.name, 365 * 24 * time.Hour)
+	template, err := createCATemplate(cmd.name, cmd.duration)
 	if err != nil {
 		return errors.Wrap(err, "Error generating the certificate's template")
 	}
@@ -128,6 +136,7 @@ func NewCommandCreateCA(config, flags *viper.Viper, ctx *ishell.Context) (*cobra
 	}
 
 	cmd.Flags().StringP("name", "n", "", "Common Name for the CA")
+	cmd.Flags().StringP("duration", "d", "3600 * 24 * 365", "Set the Not Valid After field in second. Support arithmetic operations")
 
 	cmd.MarkFlagRequired("name")
 

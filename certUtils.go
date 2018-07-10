@@ -296,7 +296,7 @@ func ExportCRL(base, format, outputDir string, ctx *ishell.Context, dk []byte) (
 	return nil
 }
 
-func CreateCRL(base string, dk []byte) (error) {
+func CreateCRL(base string, duration time.Duration, dk []byte) (error) {
 	crt, key, err := LoadCA(base, dk)
 	if err != nil {
 		return errors.Wrap(err, "Error loading ca")
@@ -309,7 +309,7 @@ func CreateCRL(base string, dk []byte) (error) {
 
 	now := time.Now()
 
-	crl, err := crt.CreateCRL(rand.Reader, key, certs, now, now.Add(time.Hour))
+	crl, err := crt.CreateCRL(rand.Reader, key, certs, now, now.Add(duration))
 	if err != nil {
 		return errors.Wrap(err, "Error creating CRL")
 	}
