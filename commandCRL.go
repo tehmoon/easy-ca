@@ -44,6 +44,7 @@ func (cmd *CommandCRL) Init(set *flag.FlagSet, args []string) (error) {
 	if err != nil {
 		return errors.WrapErr(ErrCommandBadFlags, err)
 	}
+
 	return nil
 }
 
