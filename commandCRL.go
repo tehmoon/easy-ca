@@ -16,7 +16,7 @@ type CommandCRL struct {
 	config *viper.Viper
 	update bool
 	export bool
-	ctx *ishell.Context
+	context *ishell.Context
 	outputDir string
 	duration time.Duration
 }
@@ -47,6 +47,21 @@ func (cmd *CommandCRL) Init(set *flag.FlagSet, args []string) (error) {
 	return nil
 }
 
+func UpdateCRL(config *viper.Viper, context *ishell.Context) (error) {
+	flags := viper.New()
+	crl := NewCommandCRL(config, flags, context)
+
+	crl.SetArgs(make([]string, 0))
+
+	crl.Flags().Set("update", "true")
+	err := crl.Execute()
+	if err != nil {
+		return errors.Wrap(err, "Error updating CRL")
+	}
+
+	return nil
+}
+
 func (cmd CommandCRL) Do() (error) {
 	dk := GetConfigDK(cmd.config)
 
@@ -58,7 +73,7 @@ func (cmd CommandCRL) Do() (error) {
 			return errors.Wrap(err, "Error creating CRL")
 		}
 	} else if cmd.export {
-		err := ExportCRL(path, "pem", cmd.outputDir, cmd.ctx, dk)
+		err := ExportCRL(path, "pem", cmd.outputDir, cmd.context, dk)
 		if err != nil {
 			return errors.Wrap(err, "Error exporting CRL")
 		}
@@ -74,7 +89,7 @@ func NewCommandCRL(config, flags *viper.Viper, ctx *ishell.Context) (*cobra.Comm
 		RunE: ExecuteCommand(&CommandCRL{
 			flags: flags,
 			config: config,
-			ctx: ctx,
+			context: ctx,
 		}, ctx),
 	}
 

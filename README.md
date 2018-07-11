@@ -68,7 +68,6 @@ Not everything is implemented but the default feature set is!!
 
   - List certificates
   - Add x509 v3 Alternative Names constrains from parsing the common name
-  - Auto CRL at create/revoke
   - Set command: (path)
   - Req server
   - Generate cert + keys send to server

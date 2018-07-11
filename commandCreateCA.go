@@ -23,6 +23,7 @@ type CommandCreateCA struct {
 	name string
 	template *x509.Certificate
 	duration time.Duration
+	context *ishell.Context
 }
 
 func (cmd CommandCreateCA) Config() (*viper.Viper) {
@@ -84,6 +85,11 @@ func (cmd CommandCreateCA) Do() (error) {
 		return errors.Wrap(err, "Error saving ca.key file")
 	}
 
+	err = UpdateCRL(cmd.config, cmd.context)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -132,6 +138,7 @@ func NewCommandCreateCA(config, flags *viper.Viper, ctx *ishell.Context) (*cobra
 		RunE: ExecuteCommand(&CommandCreateCA{
 			flags: flags,
 			config: config,
+			context: ctx,
 		}, ctx),
 	}
 
