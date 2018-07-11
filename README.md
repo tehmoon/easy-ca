@@ -66,7 +66,6 @@ Not everything is implemented but the default feature set is!!
 
 ## TODO:
 
-  - Copy path flag to config
   - List certificates
   - Add x509 v3 Alternative Names constrains from parsing the common name
   - Auto CRL at create/revoke
