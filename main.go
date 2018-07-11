@@ -66,10 +66,17 @@ func ExecuteCommand(command Command, ctx *ishell.Context) (func(cmd *cobra.Comma
 		config := command.Config()
 		flags := command.Flags()
 
-		path := flags.GetString("path")
+		path := config.GetString("path")
 		if path == "" {
-			return errors.Wrap(ErrCommandBadFlags, "Path flag cannot be empty")
+			path = flags.GetString("path")
+			if path == "" {
+				return errors.Wrap(ErrCommandBadFlags, "Path flag cannot be empty")
+			}
+
+			config.Set("path", path)
 		}
+
+		flags.Set("path", path)
 
 		if key := config.Get("key"); key == nil {
 			err = CheckInitDirectory(path)

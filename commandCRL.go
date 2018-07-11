@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"github.com/tehmoon/errors"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/cobra"
@@ -15,8 +16,9 @@ type CommandCRL struct {
 	config *viper.Viper
 	update bool
 	export bool
-	ctx *ishell.Context
+	context *ishell.Context
 	outputDir string
+	duration time.Duration
 }
 
 func (cmd CommandCRL) Config() (*viper.Viper) {
@@ -36,6 +38,28 @@ func (cmd *CommandCRL) Init(set *flag.FlagSet, args []string) (error) {
 
 	cmd.outputDir = cmd.flags.GetString("output-dir")
 
+	var err error
+
+	cmd.duration, err = parseDurationString(cmd.flags.GetString("duration"), time.Second)
+	if err != nil {
+		return errors.WrapErr(ErrCommandBadFlags, err)
+	}
+
+	return nil
+}
+
+func UpdateCRL(config *viper.Viper, context *ishell.Context) (error) {
+	flags := viper.New()
+	crl := NewCommandCRL(config, flags, context)
+
+	crl.SetArgs(make([]string, 0))
+
+	crl.Flags().Set("update", "true")
+	err := crl.Execute()
+	if err != nil {
+		return errors.Wrap(err, "Error updating CRL")
+	}
+
 	return nil
 }
 
@@ -45,12 +69,12 @@ func (cmd CommandCRL) Do() (error) {
 	path := cmd.flags.GetString("path")
 
 	if cmd.update {
-		err := CreateCRL(path, dk)
+		err := CreateCRL(path, cmd.duration, dk)
 		if err != nil {
 			return errors.Wrap(err, "Error creating CRL")
 		}
 	} else if cmd.export {
-		err := ExportCRL(path, "pem", cmd.outputDir, cmd.ctx, dk)
+		err := ExportCRL(path, "pem", cmd.outputDir, cmd.context, dk)
 		if err != nil {
 			return errors.Wrap(err, "Error exporting CRL")
 		}
@@ -66,13 +90,14 @@ func NewCommandCRL(config, flags *viper.Viper, ctx *ishell.Context) (*cobra.Comm
 		RunE: ExecuteCommand(&CommandCRL{
 			flags: flags,
 			config: config,
-			ctx: ctx,
+			context: ctx,
 		}, ctx),
 	}
 
 	cmd.Flags().Bool("update", false, "Update Certificate Revocation List")
 	cmd.Flags().Bool("export", false, "Export Certificate Revocation List")
 	cmd.Flags().StringP("output-dir", "o", "", "Output to directory. Filename will be auto-generated")
+	cmd.Flags().StringP("duration", "d", "3600", "Set the validity of the CRL in second. Support arithmetic operations")
 
 	flags.BindPFlags(cmd.Flags())
 

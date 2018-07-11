@@ -16,6 +16,7 @@ type CommandRevoke struct {
 	template *x509.Certificate
 	flags *viper.Viper
 	config *viper.Viper
+	context *ishell.Context
 }
 
 func (cmd CommandRevoke) Config() (*viper.Viper) {
@@ -74,6 +75,11 @@ func (cmd CommandRevoke) Do() (error) {
 		return errors.Wrap(err, "Error revoking certificate")
 	}
 
+	err = UpdateCRL(cmd.config, cmd.context)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -84,6 +90,7 @@ func NewCommandRevoke(config, flags *viper.Viper, ctx *ishell.Context) (*cobra.C
 		RunE: ExecuteCommand(&CommandRevoke{
 			flags: flags,
 			config: config,
+			context: ctx,
 		}, ctx),
 	}
 

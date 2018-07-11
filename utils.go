@@ -13,7 +13,68 @@ import (
 	"github.com/spf13/viper"
 	"crypto/cipher"
 	"crypto/aes"
+	"strconv"
+	"bytes"
+	"strings"
+	ivyParse "robpike.io/ivy/parse"
+	ivyRun "robpike.io/ivy/run"
+	ivyScan "robpike.io/ivy/scan"
+	ivyConfig "robpike.io/ivy/config"
+	ivyExec "robpike.io/ivy/exec"
+	"time"
 )
+
+func parseDurationString(duration string, base time.Duration) (time.Duration, error) {
+	var dd time.Duration
+
+	d, ok := evalMath(duration)
+	if ! ok {
+		return dd, errors.New("Error parsing --duration flag")
+	}
+
+	dd = base * time.Duration(d)
+	if int64(dd) < 0 {
+		return dd, errors.New("Duration flag cannot be negative")
+	}
+
+	return dd, nil
+}
+
+func evalMath(s string) (int64, bool) {
+	buf := bytes.NewBuffer(make([]byte, 0))
+
+	conf := &ivyConfig.Config{}
+	conf.SetFormat("")
+	conf.SetMaxDigits(1e9)
+	conf.SetOrigin(1)
+	conf.SetPrompt("")
+	conf.SetOutput(buf)
+
+	context := ivyExec.NewContext(conf)
+
+	scanner := ivyScan.New(context, "", strings.NewReader(s))
+	parser := ivyParse.NewParser("", scanner, context)
+
+	sync := make(chan bool)
+
+	go func(sync chan bool) {
+		sync <- ivyRun.Run(parser, context, false)
+	}(sync)
+
+	ok := <- sync
+	if ! ok {
+		return 0, false
+	}
+
+	duration := buf.String()
+
+	i, err := strconv.ParseInt(duration[:len(duration) - 1], 10, 64)
+	if err != nil {
+		return 0, false
+	}
+
+	return i, true
+}
 
 func InitPasswordFile(file, password string) ([]byte, error) {
 	salt := make([]byte, 16)
