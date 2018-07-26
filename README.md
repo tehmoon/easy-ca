@@ -70,4 +70,4 @@ Not everything is implemented but the default feature set is!!
   - Add x509 v3 Alternative Names constrains from parsing the common name
   - Set command: (path)
   - Req server
-  - Generate cert + keys send to server
+  - client/server option to securely issue certificate. Negociate symetric key each side
