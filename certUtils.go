@@ -35,6 +35,7 @@ func createTemplate(name string, valid time.Duration) (*x509.Certificate, error)
 		NotAfter: now.Add(valid),
 		BasicConstraintsValid: true,
 		KeyUsage: x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		DNSNames: []string{},
 	}
 
 	template.SubjectKeyId = make([]byte, 20)
