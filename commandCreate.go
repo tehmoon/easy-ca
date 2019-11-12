@@ -20,6 +20,7 @@ type CommandCreate struct {
 	template *x509.Certificate
 	server bool
 	client bool
+	altDNS []string
 	duration time.Duration
 }
 
@@ -88,6 +89,10 @@ func (cmd CommandCreate) Do() (error) {
 		return errors.New("Unknown certificate's client/server usage")
 	}
 
+	for _, name := range cmd.altDNS {
+		template.DNSNames = append(template.DNSNames, name)
+	}
+
 	cert, err := signCertificate(template, caCert, caKey, key.Public())
 	if err != nil {
 		return err
@@ -107,19 +112,21 @@ func (cmd CommandCreate) Do() (error) {
 }
 
 func NewCommandCreate(config, flags *viper.Viper, ctx *ishell.Context) (*cobra.Command) {
+	cc := &CommandCreate{
+		flags: flags,
+		config: config,
+	}
 	cmd := &cobra.Command{
 		Use: "create",
 		Args: cobra.ExactArgs(0),
-		RunE: ExecuteCommand(&CommandCreate{
-			flags: flags,
-			config: config,
-		}, ctx),
+		RunE: ExecuteCommand(cc, ctx),
 	}
 
 	cmd.Flags().StringP("name", "n", "", "Common Name for the certificate")
 	cmd.Flags().Bool("server", false, "Use certificate server's side")
 	cmd.Flags().Bool("client", false, "Use certificate client's side")
 	cmd.Flags().StringP("duration", "d", "3600 * 24 * 30 * 3", "Set the Not Valid After field in second. Support arithmetic operations")
+	cmd.Flags().StringArrayVar(&cc.altDNS, "alt-dns", make([]string, 0), "Set alternative names")
 
 	cmd.MarkFlagRequired("name")
 
@@ -146,6 +153,7 @@ func createTemplateServer(name string, valid time.Duration) (*x509.Certificate, 
 	}
 
 	template.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth,}
+	template.DNSNames = append(template.DNSNames, name)
 
 	return template, nil
 }
