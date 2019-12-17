@@ -32,8 +32,8 @@ func (cmd *CommandCreate) Init(set *flag.FlagSet, args []string) (error) {
 
 	cmd.server = cmd.flags.GetBool("server")
 	cmd.client = cmd.flags.GetBool("client")
-	if (! cmd.server && ! cmd.client) || (cmd.server && cmd.client) {
-		return errors.Wrap(ErrCommandBadFlags, "Use one of --server or --client")
+	if (! cmd.server && ! cmd.client) {
+		return errors.Wrap(ErrCommandBadFlags, "Use at least one of --server or --client")
 	}
 
 	var err error
@@ -73,21 +73,20 @@ func (cmd CommandCreate) Do() (error) {
 		return errors.Wrap(err, "Failed to create the private key")
 	}
 
-	var template *x509.Certificate
+	template, err := createTemplate(cmd.name, cmd.duration)
+	if err != nil {
+		return errors.Wrap(err, "Error generating the certificate's template")
+	}
 
 	if cmd.server {
-		template, err = createTemplateServer(cmd.name, cmd.duration)
-		if err != nil {
-			return errors.Wrap(err, "Error generating the certificate's template for server")
-		}
-	} else if cmd.client {
-		template, err = createTemplateClient(cmd.name, cmd.duration)
-		if err != nil {
-			return errors.Wrap(err, "Error generating the certificate's template for client")
-		}
-	} else {
-		return errors.New("Unknown certificate's client/server usage")
+		template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
 	}
+
+	if cmd.client {
+		template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageServerAuth)
+	}
+
+	template.DNSNames = append(template.DNSNames, cmd.name)
 
 	for _, name := range cmd.altDNS {
 		template.DNSNames = append(template.DNSNames, name)
