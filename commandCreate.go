@@ -79,11 +79,11 @@ func (cmd CommandCreate) Do() (error) {
 	}
 
 	if cmd.server {
-		template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
+		template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageServerAuth)
 	}
 
 	if cmd.client {
-		template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageServerAuth)
+		template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
 	}
 
 	template.DNSNames = append(template.DNSNames, cmd.name)
